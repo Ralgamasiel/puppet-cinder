@@ -2,9 +2,7 @@
 #
 # This class is used to manage arbitrary cinder configurations.
 #
-# === Parameters
-#
-# [*xxx_config*]
+# example xxx_config
 #   (optional) Allow configuration of arbitrary cinder configurations.
 #   The value is a hash of xxx_config resources. Example:
 #   { 'DEFAULT/foo' => { value => 'fooValue'},
@@ -17,6 +15,8 @@
 #       value: fooValue
 #     DEFAULT/bar:
 #       value: barValue
+#
+# === Parameters
 #
 # [*cinder_config*]
 #   (optional) Allow configuration of cinder.conf configurations.
@@ -33,10 +33,10 @@ class cinder::config (
   $api_paste_ini_config  = {},
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
-  validate_hash($cinder_config)
-  validate_hash($api_paste_ini_config)
+  validate_legacy(Hash, 'validate_hash', $cinder_config)
+  validate_legacy(Hash, 'validate_hash', $api_paste_ini_config)
 
   create_resources('cinder_config', $cinder_config)
   create_resources('cinder_api_paste_ini', $api_paste_ini_config)

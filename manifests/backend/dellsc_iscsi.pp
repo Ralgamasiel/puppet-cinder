@@ -18,9 +18,6 @@
 #
 # [*target_ip_address*]
 #   (optional) The IP address that the iSCSI daemon is listening on.
-#   If not set, the iscsi_ip_address must be specified. The target_ip_address
-#   will be required once the deprecated iscsi_ip_address parameter is
-#   removed in a future release.
 #   Defaults to undef.
 #
 # [*volume_backend_name*]
@@ -90,19 +87,6 @@
 #   (Optional) Enables multipath configuration.
 #   Defaults to true.
 #
-# DEPRECATED PARAMETERS
-# [*excluded_domain_ip*]
-#   (optional) Domain IP to be excluded from iSCSI returns of Storage Center.
-#   Defaults to undef.
-#
-# [*iscsi_ip_address*]
-#   (Optional) The IP address that the iSCSI daemon is listening on
-#   Defaults to undef.
-#
-# [*iscsi_port*]
-#   (Optional) iSCSI target user-land tool to use.
-#   Defaults to undef.
-#
 define cinder::backend::dellsc_iscsi (
   $san_ip,
   $san_login,
@@ -124,13 +108,12 @@ define cinder::backend::dellsc_iscsi (
   $manage_volume_type           = false,
   $use_multipath_for_image_xfer = true,
   $extra_options                = {},
-  # DEPRECATED PARAMETERS
-  $excluded_domain_ip           = undef,
-  $iscsi_ip_address             = undef,
-  $iscsi_port                   = undef,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
+
+  warning('The cinder::backend::dellsc_iscsi is deprecated and will be removed in V-release, \
+please use cinder::backend::dellemc_sc resource instead.')
 
   if $dell_sc_server_folder == 'srv' {
     warning("The OpenStack default value of dell_sc_server_folder differs from the puppet module \
@@ -142,22 +125,6 @@ default of \"srv\" and will be changed to the upstream OpenStack default in N-re
 default of \"vol\" and will be changed to the upstream OpenStack default in N-release.")
   }
 
-  if $target_ip_address or $iscsi_ip_address {
-    if $iscsi_ip_address {
-      warning('The iscsi_ip_address parameter is deprecated, use target_ip_address instead.')
-    }
-    $target_ip_address_real = pick($target_ip_address, $iscsi_ip_address)
-  } else {
-    fail('A target_ip_address or iscsi_ip_address must be specified.')
-  }
-
-  if $iscsi_port {
-    warning('The iscsi_port parameter is deprecated, use target_port instead.')
-    $target_port_real = $iscsi_port
-  } else {
-    $target_port_real = $target_port
-  }
-
   $driver = 'dell_emc.sc.storagecenter_iscsi.SCISCSIDriver'
   cinder_config {
     "${name}/volume_backend_name":          value => $volume_backend_name;
@@ -166,26 +133,19 @@ default of \"vol\" and will be changed to the upstream OpenStack default in N-re
     "${name}/san_ip":                       value => $san_ip;
     "${name}/san_login":                    value => $san_login;
     "${name}/san_password":                 value => $san_password, secret => true;
-    "${name}/target_ip_address":            value => $target_ip_address_real;
+    "${name}/target_ip_address":            value => $target_ip_address;
     "${name}/dell_sc_ssn":                  value => $dell_sc_ssn;
     "${name}/dell_sc_api_port":             value => $dell_sc_api_port;
     "${name}/dell_sc_server_folder":        value => $dell_sc_server_folder;
     "${name}/dell_sc_verify_cert":          value => $dell_sc_verify_cert;
     "${name}/dell_sc_volume_folder":        value => $dell_sc_volume_folder;
-    "${name}/target_port":                  value => $target_port_real;
+    "${name}/target_port":                  value => $target_port;
     "${name}/excluded_domain_ips":          value => $excluded_domain_ips;
     "${name}/secondary_san_ip":             value => $secondary_san_ip;
     "${name}/secondary_san_login":          value => $secondary_san_login;
     "${name}/secondary_san_password":       value => $secondary_san_password, secret => true;
     "${name}/secondary_sc_api_port":        value => $secondary_sc_api_port;
     "${name}/use_multipath_for_image_xfer": value => $use_multipath_for_image_xfer;
-  }
-
-  if $excluded_domain_ip {
-    warning('The excluded_domain_ip is deprecated. Please use excluded_domain_ips instead.')
-    cinder_config {
-      "${name}/excluded_domain_ip": value => $excluded_domain_ip;
-    }
   }
 
   if $manage_volume_type {

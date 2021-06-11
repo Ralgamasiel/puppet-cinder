@@ -3,7 +3,7 @@
       - puppet-openstack-check-jobs
       - puppet-openstack-module-unit-jobs
       - puppet-openstack-integration-jobs-all
-      - puppet-openstack-beaker-jobs
+      - puppet-openstack-litmus-jobs
       - release-notes-jobs-python3
     check:
       jobs:
@@ -14,14 +14,16 @@
 
 - job:
     name: puppet-cinder-tripleo-standalone
-    parent: tripleo-puppet-ci-centos-7-standalone
+    parent: tripleo-puppet-ci-centos-8-standalone
     description: |
       TripleO standalone Job running Cinder specific Tempest tests.
     vars:
+      build_container_images: true
       featureset_override:
-        run_tempest: true
-        tempest_whitelist:
-          - 'volume'
-          - 'cinder_tempest_plugin'
-        tempest_plugins:
-          - 'python-cinder-tests-tempest'
+        run_tempest: false
+        tempest_services:
+          - cinder
+        tempest_test_whitelist:
+          - 'tempest.scenario.test_volume_boot_pattern.TestVolumeBootPattern.test_volume_boot_pattern'
+          - 'tempest.scenario.test_snapshot_pattern.TestSnapshotPattern.test_snapshot_pattern'
+        use_os_tempest: true

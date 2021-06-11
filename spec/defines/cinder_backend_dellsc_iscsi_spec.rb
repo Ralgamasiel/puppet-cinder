@@ -40,7 +40,6 @@ describe 'cinder::backend::dellsc_iscsi' do
       :dell_sc_verify_cert       => true,
       :dell_sc_volume_folder     => 'other_vol',
       :target_port               => 222,
-      :excluded_domain_ip        => '127.0.0.2',
       :secondary_san_ip          => '127.0.0.3',
       :secondary_san_login       => 'Foo',
       :secondary_san_password    => 'Bar',
@@ -53,17 +52,17 @@ describe 'cinder::backend::dellsc_iscsi' do
       default_params.merge(params)
     end
 
-    it { should contain_cinder__backend__dellsc_iscsi(config_group_name) }
+    it { is_expected.to contain_cinder__backend__dellsc_iscsi(config_group_name) }
 
     it {
       params_hash.each_pair do |config,value|
-        should contain_cinder_config("#{config_group_name}/#{config}").with_value( value )
+        is_expected.to contain_cinder_config("#{config_group_name}/#{config}").with_value( value )
       end
     }
 
     it {
-      should contain_cinder_config("#{config_group_name}/volume_driver").with_value('cinder.volume.drivers.dell_emc.sc.storagecenter_iscsi.SCISCSIDriver')
-      should contain_cinder_config("#{config_group_name}/use_multipath_for_image_xfer").with_value('true')
+      is_expected.to contain_cinder_config("#{config_group_name}/volume_driver").with_value('cinder.volume.drivers.dell_emc.sc.storagecenter_iscsi.SCISCSIDriver')
+      is_expected.to contain_cinder_config("#{config_group_name}/use_multipath_for_image_xfer").with_value('true')
     }
   end
 
@@ -85,7 +84,7 @@ describe 'cinder::backend::dellsc_iscsi' do
         params.merge!({:extra_options => {'dellsc_iscsi/param1' => { 'value' => 'value1' }}})
       end
 
-      it { should contain_cinder_config('dellsc_iscsi/param1').with_value('value1') }
+      it { is_expected.to contain_cinder_config('dellsc_iscsi/param1').with_value('value1') }
     end
 
     context 'dellsc_iscsi backend with cinder type' do
@@ -93,26 +92,7 @@ describe 'cinder::backend::dellsc_iscsi' do
         params.merge!({:manage_volume_type => true})
       end
 
-      it { should contain_cinder_type('dellsc_iscsi').with(:ensure => :present, :properties => ['volume_backend_name=dellsc_iscsi']) }
-    end
-
-    context 'with deprecated iscsi_ip_address' do
-      before do
-        params.merge!({
-          :target_ip_address => :undef,
-          :iscsi_ip_address  => '127.0.0.42',
-        })
-      end
-
-      it { should contain_cinder_config('dellsc_iscsi/target_ip_address').with_value('127.0.0.42') }
-    end
-
-    context 'with no target_ip_address or iscsi_ip_address' do
-      before do
-        params.delete(:target_ip_address)
-      end
-
-      it { should raise_error(Puppet::Error, /A target_ip_address or iscsi_ip_address must be specified./) }
+      it { is_expected.to contain_cinder_type('dellsc_iscsi').with(:ensure => :present, :properties => ['volume_backend_name=dellsc_iscsi']) }
     end
   end
 

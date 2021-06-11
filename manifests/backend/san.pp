@@ -49,9 +49,6 @@
 # [*ssh_min_pool_conn*]
 #   (optional) Minimum ssh connections in the pool.
 #
-# [*ssh_min_pool_conn*]
-#   (optional) Maximum ssh connections in the pool.
-#
 # [*ssh_max_pool_conn*]
 #   (Optional) Maximum ssh connections in the pool.
 #   Defaults to '5'.
@@ -87,7 +84,7 @@ define cinder::backend::san (
   $extra_options             = {},
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
   cinder_config {
     "${name}/volume_backend_name":       value => $volume_backend_name;

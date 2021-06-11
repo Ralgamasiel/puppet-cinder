@@ -42,13 +42,13 @@ class cinder::db::mysql (
   $collate       = 'utf8_general_ci',
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
-  validate_string($password)
+  validate_legacy(String, 'validate_string', $password)
 
   ::openstacklib::db::mysql { 'cinder':
     user          => $user,
-    password_hash => mysql::password($password),
+    password      => $password,
     dbname        => $dbname,
     host          => $host,
     charset       => $charset,

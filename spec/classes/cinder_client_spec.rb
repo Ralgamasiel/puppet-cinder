@@ -16,6 +16,7 @@ describe 'cinder::client' do
       default_params.merge(params)
     end
 
+    it { is_expected.to contain_class('cinder::deps') }
     it { is_expected.to contain_class('cinder::params') }
 
     it 'installs cinder client package' do
@@ -26,7 +27,7 @@ describe 'cinder::client' do
       )
     end
 
-    it { should contain_class('openstacklib::openstackclient') }
+    it { is_expected.to contain_class('openstacklib::openstackclient') }
   end
 
   on_supported_os({
@@ -42,7 +43,7 @@ describe 'cinder::client' do
         when 'Debian'
           { :client_package_name => 'python3-cinderclient' }
         when 'RedHat'
-          { :client_package_name => 'python-cinderclient' }
+          { :client_package_name => 'python3-cinderclient' }
         end
       end
 

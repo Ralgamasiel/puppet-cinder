@@ -44,8 +44,9 @@ define cinder::backend::dellemc_vmax_iscsi (
   $manage_volume_type            = false,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
+  warning('The cinder::backend::dellemc_vmax_iscsi is not supported, please use cinder::backend::dellemc_powermax resource instead.')
 
   cinder_config {
     "${name}/volume_backend_name":             value => $volume_backend_name;

@@ -17,7 +17,7 @@
 #
 # [*os_auth_url*]
 #   (Optional) The keystone auth url.
-#   Defaults to 'http://127.0.0.1:5000/v2.0/'.
+#   Defaults to 'http://127.0.0.1:5000/v3/'.
 #
 # [*os_region_name*]
 #   (Optional) The keystone region name.
@@ -49,7 +49,7 @@ define cinder::quota_set (
   $os_password,
   $os_tenant_name  = 'admin',
   $os_username     = 'admin',
-  $os_auth_url     = 'http://127.0.0.1:5000/v2.0/',
+  $os_auth_url     = 'http://127.0.0.1:5000/v3/',
   $os_region_name  = undef,
   $quota_volumes   = 10,
   $quota_snapshots = 10,
@@ -58,7 +58,7 @@ define cinder::quota_set (
   $volume_type     = $name,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
   if $os_region_name {
     $cinder_env = [

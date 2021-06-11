@@ -22,6 +22,20 @@
 #   (Optional)
 #   Defaults to 'openstack'.
 #
+# [*notification_transport_url*]
+#   (Optional) A URL representing the messaging driver to use for notifications
+#   and its full configuration. Transport URLs take the form:
+#     transport://user:pass@host1:port[,hostN:portN]/virtual_host
+#   Defaults to $::os_service_default
+#
+# [*notification_driver*]
+#   (Option) Driver or drivers to handle sending notifications.
+#   Defaults to $::os_service_default
+#
+# [*notification_topics*]
+#   (Optional) AMQP topic used for OpenStack notifications
+#   Defaults to $::os_service_default
+#
 # [*rabbit_ha_queues*]
 #   (optional) Use HA queues in RabbitMQ (x-ha-policy: all).
 #   Defaults to $::os_service_default
@@ -39,6 +53,16 @@
 #   check the heartbeat on RabbitMQ connection.  (i.e. rabbit_heartbeat_rate=2
 #   when rabbit_heartbeat_timeout_threshold=60, the heartbeat will be checked
 #   every 30 seconds.
+#   Defaults to $::os_service_default
+#
+# [*rabbit_heartbeat_in_pthread*]
+#   (Optional) EXPERIMENTAL: Run the health check heartbeat thread
+#   through a native python thread. By default if this
+#   option isn't provided the  health check heartbeat will
+#   inherit the execution model from the parent process. By
+#   example if the parent process have monkey patched the
+#   stdlib by using eventlet/greenlet then the heartbeat
+#   will be run through a green thread.
 #   Defaults to $::os_service_default
 #
 # [*rabbit_use_ssl*]
@@ -134,10 +158,6 @@
 #   (Optional) Password for decrypting ssl_key_file (if encrypted)
 #   Defaults to $::os_service_default.
 #
-# [*amqp_allow_insecure_clients*]
-#   (Optional) Accept clients using either SSL or plain TCP
-#   Defaults to $::os_service_default.
-#
 # [*amqp_sasl_mechanisms*]
 #   (Optional) Space separated list of acceptable SASL mechanisms
 #   Defaults to $::os_service_default.
@@ -157,35 +177,6 @@
 # [*amqp_password*]
 #   (Optional) Password for message broker authentication
 #   Defaults to $::os_service_default.
-#
-# [*database_connection*]
-#    Url used to connect to database.
-#    (Optional) Defaults to undef.
-#
-# [*database_idle_timeout*]
-#   Timeout when db connections should be reaped.
-#   (Optional) Defaults to undef.
-#
-# [*database_min_pool_size*]
-#   Minimum number of SQL connections to keep open in a pool.
-#   (Optional) Defaults to undef.
-#
-# [*database_max_pool_size*]
-#   Maximum number of SQL connections to keep open in a pool.
-#   (Optional) Defaults to undef.
-#
-# [*database_max_retries*]
-#   Maximum db connection retries during startup.
-#   Setting -1 implies an infinite retry count.
-#   (Optional) Defaults to undef.
-#
-# [*database_retry_interval*]
-#   Interval between retries of opening a sql connection.
-#   (Optional) Defaults to undef.
-#
-# [*database_max_overflow*]
-#   If set, use this value for max_overflow with sqlalchemy.
-#   (Optional) Defaults to undef.
 #
 # [*storage_availability_zone*]
 #   (optional) Availability zone of the node.
@@ -235,24 +226,77 @@
 #   in the cinder config.
 #   Defaults to false.
 #
-# [*backend_host*]
-#   (optional) Backend override of host value.
+# [*enable_force_upload*]
+#   (optional) Enables the Force option on upload_to_image. This
+#   enables running upload_volume on in-use volumes for backends that
+#   support it.
 #   Defaults to $::os_service_default.
 #
+# DEPRECATED PARAMETERS
+#
+# [*database_min_pool_size*]
+#   Minimum number of SQL connections to keep open in a pool.
+#   (Optional) Defaults to undef.
+#
+# [*database_connection*]
+#    Url used to connect to database.
+#    (Optional) Defaults to undef.
+#
+# [*database_idle_timeout*]
+#   Timeout when db connections should be reaped.
+#   (Optional) Defaults to undef.
+#
+# [*database_max_pool_size*]
+#   Maximum number of SQL connections to keep open in a pool.
+#   (Optional) Defaults to undef.
+#
+# [*database_max_retries*]
+#   Maximum db connection retries during startup.
+#   Setting -1 implies an infinite retry count.
+#   (Optional) Defaults to undef.
+#
+# [*database_retry_interval*]
+#   Interval between retries of opening a sql connection.
+#   (Optional) Defaults to undef.
+#
+# [*database_max_overflow*]
+#   If set, use this value for max_overflow with sqlalchemy.
+#   (Optional) Defaults to undef.
+#
+# [*amqp_allow_insecure_clients*]
+#   (Optional) Accept clients using either SSL or plain TCP
+#   Defaults to undef.
+#
+# [*backend_host*]
+#   (optional) Backend override of host value.
+#   Defaults to undef.
+#
+# [*keymgr_backend*]
+#   (Optional) Key Manager service class.
+#   Example of valid value: barbican
+#   Defaults to undef.
+#
+# [*keymgr_encryption_api_url*]
+#   (Optional) Key Manager service URL
+#   Example of valid value: https://localhost:9311/v1
+#   Defaults to undef.
+#
+# [*keymgr_encryption_auth_url*]
+#   (Optional) Auth URL for keymgr authentication. Should be in format
+#   http://auth_url:5000/v3
+#   Defaults to undef.
+#
 class cinder (
-  $database_connection                = undef,
-  $database_idle_timeout              = undef,
-  $database_min_pool_size             = undef,
-  $database_max_pool_size             = undef,
-  $database_max_retries               = undef,
-  $database_retry_interval            = undef,
-  $database_max_overflow              = undef,
   $default_transport_url              = $::os_service_default,
   $rpc_response_timeout               = $::os_service_default,
   $control_exchange                   = 'openstack',
+  $notification_transport_url         = $::os_service_default,
+  $notification_driver                = $::os_service_default,
+  $notification_topics                = $::os_service_default,
   $rabbit_ha_queues                   = $::os_service_default,
   $rabbit_heartbeat_timeout_threshold = $::os_service_default,
   $rabbit_heartbeat_rate              = $::os_service_default,
+  $rabbit_heartbeat_in_pthread        = $::os_service_default,
   $rabbit_use_ssl                     = $::os_service_default,
   $service_down_time                  = $::os_service_default,
   $report_interval                    = $::os_service_default,
@@ -274,7 +318,6 @@ class cinder (
   $amqp_ssl_cert_file                 = $::os_service_default,
   $amqp_ssl_key_file                  = $::os_service_default,
   $amqp_ssl_key_password              = $::os_service_default,
-  $amqp_allow_insecure_clients        = $::os_service_default,
   $amqp_sasl_mechanisms               = $::os_service_default,
   $amqp_sasl_config_dir               = $::os_service_default,
   $amqp_sasl_config_name              = $::os_service_default,
@@ -291,11 +334,60 @@ class cinder (
   $host                               = $::os_service_default,
   $enable_new_services                = $::os_service_default,
   $purge_config                       = false,
-  $backend_host                       = $::os_service_default,
+  $enable_force_upload                = $::os_service_default,
+  # DEPRECATED PARAMETERS
+  $database_min_pool_size             = undef,
+  $database_connection                = undef,
+  $database_idle_timeout              = undef,
+  $database_max_pool_size             = undef,
+  $database_max_retries               = undef,
+  $database_retry_interval            = undef,
+  $database_max_overflow              = undef,
+  $amqp_allow_insecure_clients        = undef,
+  $backend_host                       = undef,
+  $keymgr_backend                     = undef,
+  $keymgr_encryption_api_url          = undef,
+  $keymgr_encryption_auth_url         = undef,
 ) inherits cinder::params {
 
-  include ::cinder::deps
-  include ::cinder::db
+  include cinder::deps
+  include cinder::db
+
+  if $amqp_allow_insecure_clients != undef {
+    warning('The amqp_allow_insecure_clients parameter is deprecated and \
+will be removed in a future release.')
+  }
+
+  if $database_connection != undef {
+    warning('The database_connection parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_connection instead')
+  }
+
+  if $database_idle_timeout != undef {
+    warning('The database_idle_timeout parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_connection_recycle_time \
+instead')
+  }
+
+  if $database_max_pool_size != undef {
+    warning('The database_max_pool_size parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_max_pool_size instead')
+  }
+
+  if $database_max_retries!= undef {
+    warning('The database_max_retries parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_max_retries instead')
+  }
+
+  if $database_retry_interval != undef {
+    warning('The database_retry_interval parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_retry_interval instead')
+  }
+
+  if $database_max_overflow != undef {
+    warning('The database_max_overflow parameter is deprecated and will be \
+removed in a future realse. Use cinder::db::database_max_overflow instead')
+  }
 
   package { 'cinder':
     ensure => $package_ensure,
@@ -311,6 +403,7 @@ class cinder (
     rabbit_ha_queues            => $rabbit_ha_queues,
     heartbeat_timeout_threshold => $rabbit_heartbeat_timeout_threshold,
     heartbeat_rate              => $rabbit_heartbeat_rate,
+    heartbeat_in_pthread        => $rabbit_heartbeat_in_pthread,
     rabbit_use_ssl              => $rabbit_use_ssl,
     kombu_reconnect_delay       => $kombu_reconnect_delay,
     kombu_failover_strategy     => $kombu_failover_strategy,
@@ -323,28 +416,33 @@ class cinder (
   }
 
   oslo::messaging::amqp { 'cinder_config':
-    server_request_prefix  => $amqp_server_request_prefix,
-    broadcast_prefix       => $amqp_broadcast_prefix,
-    group_request_prefix   => $amqp_group_request_prefix,
-    container_name         => $amqp_container_name,
-    idle_timeout           => $amqp_idle_timeout,
-    trace                  => $amqp_trace,
-    ssl_ca_file            => $amqp_ssl_ca_file,
-    ssl_cert_file          => $amqp_ssl_cert_file,
-    ssl_key_file           => $amqp_ssl_key_file,
-    ssl_key_password       => $amqp_ssl_key_password,
-    allow_insecure_clients => $amqp_allow_insecure_clients,
-    sasl_mechanisms        => $amqp_sasl_mechanisms,
-    sasl_config_dir        => $amqp_sasl_config_dir,
-    sasl_config_name       => $amqp_sasl_config_name,
-    username               => $amqp_username,
-    password               => $amqp_password,
+    server_request_prefix => $amqp_server_request_prefix,
+    broadcast_prefix      => $amqp_broadcast_prefix,
+    group_request_prefix  => $amqp_group_request_prefix,
+    container_name        => $amqp_container_name,
+    idle_timeout          => $amqp_idle_timeout,
+    trace                 => $amqp_trace,
+    ssl_ca_file           => $amqp_ssl_ca_file,
+    ssl_cert_file         => $amqp_ssl_cert_file,
+    ssl_key_file          => $amqp_ssl_key_file,
+    ssl_key_password      => $amqp_ssl_key_password,
+    sasl_mechanisms       => $amqp_sasl_mechanisms,
+    sasl_config_dir       => $amqp_sasl_config_dir,
+    sasl_config_name      => $amqp_sasl_config_name,
+    username              => $amqp_username,
+    password              => $amqp_password,
   }
 
   oslo::messaging::default { 'cinder_config':
     transport_url        => $default_transport_url,
     rpc_response_timeout => $rpc_response_timeout,
     control_exchange     => $control_exchange,
+  }
+
+  oslo::messaging::notifications { 'cinder_config':
+    transport_url => $notification_transport_url,
+    driver        => $notification_driver,
+    topics        => $notification_topics,
   }
 
   if ! $default_availability_zone {
@@ -363,15 +461,32 @@ class cinder (
     'DEFAULT/image_conversion_dir':             value => $image_conversion_dir;
     'DEFAULT/host':                             value => $host;
     'DEFAULT/enable_new_services':              value => $enable_new_services;
+    'DEFAULT/enable_force_upload':              value => $enable_force_upload;
+  }
 
-    # NOTE(abishop): $backend_host is not written here because it is not a valid
-    # DEFAULT option. It is only recognized in the backend sections. Instead,
-    # for backward compatibility, backends.pp references this parameter.
+  if $backend_host != undef {
+    if defined(Class[cinder::backends]){
+      fail('The cinder::backend_host parameter has no effect unless cinder::backends is included later')
+    }
+    warning('The cinder::backend_host parameter is deprecated. \
+Use the cinder::backends::backend_host parameter instead')
   }
 
   # V3 APIs
   cinder_config {
     'DEFAULT/enable_v3_api': value => $enable_v3_api;
+  }
+
+  if $keymgr_backend != undef {
+    warning('The keymgr_backend parameter is deprecated. Use the cinder::key_manager class')
+    include cinder::key_manager
+  }
+
+  ['keymgr_encryption_api_url', 'keymgr_encryption_auth_url'].each |String $barbican_opt| {
+    if getvar("${barbican_opt}") != undef {
+      warning("The ${barbican_opt} parameter is deprecated. Use the cinder::key_manager::barbican class")
+    }
+    include cinder::key_manager::barbican
   }
 
   oslo::concurrency { 'cinder_config':

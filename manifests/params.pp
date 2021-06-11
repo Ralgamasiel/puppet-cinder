@@ -3,10 +3,9 @@
 # Parameters for puppet-cinder
 #
 class cinder::params {
-  include ::openstacklib::defaults
-  $pyvers = $::openstacklib::defaults::pyvers
+  include openstacklib::defaults
 
-  $client_package            = "python${pyvers}-cinderclient"
+  $client_package            = 'python3-cinderclient'
   $group                     = 'cinder'
   $cinder_wsgi_script_source = '/usr/bin/cinder-wsgi'
 
@@ -23,7 +22,7 @@ class cinder::params {
     $db_sync_command           = 'cinder-manage db sync'
     $tgt_package_name          = 'tgt'
     $tgt_service_name          = 'tgt'
-    $ceph_init_override        = '/etc/init/cinder-volume.override'
+    $ceph_init_override        = '/etc/default/cinder-volume'
     $ceph_common_package_name  = 'ceph-common'
     $target_helper             = 'tgtadm'
     $lio_package_name          = 'targetcli'
@@ -47,23 +46,11 @@ class cinder::params {
     $tgt_service_name          = 'tgtd'
     $ceph_init_override        = '/etc/sysconfig/openstack-cinder-volume'
     $ceph_common_package_name  = 'ceph-common'
+    $target_helper             = 'lioadm'
     $lio_package_name          = 'targetcli'
     $lock_path                 = '/var/lib/cinder/tmp'
     $cinder_wsgi_script_path   = '/var/www/cgi-bin/cinder'
     $pywbem_package_name       = 'pywbem'
-
-    case $::operatingsystem {
-      'RedHat', 'CentOS', 'Scientific', 'OracleLinux': {
-        if (versioncmp($::operatingsystemmajrelease, '7') >= 0) {
-          $target_helper = 'lioadm'
-        } else {
-          $target_helper = 'tgtadm'
-        }
-      }
-      default: {
-        $target_helper = 'lioadm'
-      }
-    }
 
   } else {
     fail("unsupported osfamily ${::osfamily}, currently Debian and Redhat are the only supported platforms")

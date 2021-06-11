@@ -1,6 +1,7 @@
 #
 # == Class: cinder::backend::glusterfs
 #
+# DEPRECATED!
 # Configures Cinder to use GlusterFS as a volume driver
 #
 # === Parameters
@@ -72,7 +73,10 @@ define cinder::backend::glusterfs (
   $extra_options                = {},
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
+
+  warning('Support for glustefs volume driver is deprecated and will be removed \
+in a future release')
 
   $content = join($glusterfs_shares, "\n")
 

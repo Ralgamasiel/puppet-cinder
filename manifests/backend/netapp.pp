@@ -233,10 +233,11 @@ define cinder::backend::netapp (
   $nas_secure_file_permissions      = $::os_service_default,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
   if $nfs_shares {
-    validate_array($nfs_shares)
+    validate_legacy(Array, 'validate_array', $nfs_shares)
+
     file {$nfs_shares_config:
       content => join($nfs_shares, "\n"),
       require => Anchor['cinder::install::end'],

@@ -1,5 +1,6 @@
 # == define: cinder::backend::veritas_hyperscale
-#
+
+# DEPRECATED!
 # Configures Cinder to use the Veritas HyperScale Block Storage driver
 #
 # === Parameters
@@ -42,7 +43,10 @@ define cinder::backend::veritas_hyperscale (
   $manage_volume_type        = false,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
+
+  warning('Support for Veritas HyperScale Block Stoage driver is deprecated \
+and will be removed in a future release.')
 
   cinder_config {
     "${name}/volume_backend_name":        value => $volume_backend_name;

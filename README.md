@@ -23,7 +23,7 @@ cinder
 Overview
 --------
 
-The cinder module is a part of [OpenStack](https://git.openstack.org),
+The cinder module is a part of [OpenStack](https://opendev.org/openstack),
 an effort by the OpenStack infrastructure team to provide continuous
 integration testing and code review for OpenStack and OpenStack community
 projects as part of the core software. The module its self is used to flexibly
@@ -205,18 +205,6 @@ Limitations
   configure a Nexenta appliance but nova can be configured to use the Nexenta
   driver with Class['cinder::volume::nexenta'].
 
-Beaker-Rspec
-------------
-
-This module has beaker-rspec tests
-
-To run:
-
-```shell
-bundle install
-bundle exec rspec spec/acceptance
-```
-
 Development
 -----------
 
@@ -237,5 +225,5 @@ Release Notes
 Repository
 ----------
 
-* https://git.openstack.org/cgit/openstack/puppet-cinder
+* https://opendev.org/openstack/puppet-cinder
 

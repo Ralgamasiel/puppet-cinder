@@ -93,8 +93,8 @@ define cinder::backend::rbd (
   $extra_options                    = {},
 ) {
 
-  include ::cinder::deps
-  include ::cinder::params
+  include cinder::deps
+  include cinder::params
 
   $rbd_cluster_name = basename($rbd_ceph_conf, '.conf')
   if $rbd_cluster_name == 'ceph' {
@@ -151,8 +151,8 @@ define cinder::backend::rbd (
 
   case $::osfamily {
     'Debian': {
-      $override_line    = "env CEPH_ARGS=\"--id ${rbd_user}\""
-      $override_match   = '^env CEPH_ARGS='
+      $override_line    = "CEPH_ARGS=\"--id ${rbd_user}\""
+      $override_match   = '^CEPH_ARGS='
     }
     'RedHat': {
       $override_line    = "export CEPH_ARGS=\"--id ${rbd_user}\""

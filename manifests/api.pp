@@ -4,22 +4,6 @@
 #
 # === Parameters
 #
-# [*keymgr_encryption_api_url*]
-#   (optional) Key Manager service URL
-#   Example of valid value: https://localhost:9311/v1
-#   Defaults to $::os_service_default
-#
-# [*keymgr_encryption_auth_url*]
-#   (optional) Auth URL for keymgr authentication. Should be in format
-#   http://auth_url:5000/v3
-#   Defaults to $::os_service_default.
-#
-# [*os_region_name*]
-#   (optional) Some operations require cinder to make API requests
-#   to Nova. This sets the keystone region to be used for these
-#   requests. For example, boot-from-volume.
-#   Defaults to $::os_service_default
-#
 # [*service_workers*]
 #   (optional) Number of cinder-api workers
 #   Defaults to $::os_workers
@@ -90,6 +74,10 @@
 #   middleware should parse the proxy headers or not.(boolean value)
 #   Defaults to $::os_service_default
 #
+# [*max_request_body_size*]
+#   (Optional) Set max request body size
+#   Defaults to $::os_service_default.
+#
 # [*use_ssl*]
 #   (optional) Enable SSL on the API server
 #   Defaults to false
@@ -114,50 +102,22 @@
 #   (optional) What port the API listens on. Defaults to $::os_service_default
 #   If this value is modified the catalog URLs in the keystone::auth class
 #   will also need to be changed to match.
+#   Defaults to $::os_service_default
 #
-# [*keymgr_backend*]
-#   (optional) Key Manager service class.
-#   Example of valid value: castellan.key_manager.barbican_key_manager.BarbicanKeyManager
-#   Defaults to 'cinder.keymgr.conf_key_mgr.ConfKeyManager'.
+# [*use_forwarded_for*]
+#   (optional) Treat X-Forwarded-For as the canonical remote address. Only
+#   enable this if you have a sanitizing proxy.
+#   Defaults to $::os_service_default
 #
 # DEPRECATED PARAMETERS
 #
-# [*keymgr_api_class*]
-#   (optional) Deprecated. Key Manager service class.
-#   Example of valid value: castellan.key_manager.barbican_key_manager.BarbicanKeyManager
-#   Defaults to undef.
-#
-# [*nova_catalog_info*]
-#   (optional) Match this value when searching for nova in the service
-#   catalog.
-#   Defaults to undef.
-#
-# [*os_privileged_user_name*]
-#   (optional) OpenStack privileged account username. Used for requests to
-#   other services (such as Nova) that require an account with
-#   special rights.
-#   Defaults to undef.
-#
-# [*os_privileged_user_password*]
-#   (optional) Password associated with the OpenStack privileged account.
-#   Defaults to undef.
-#
-# [*os_privileged_user_tenant*]
-#   (optional) Tenant name associated with the OpenStack privileged account.
-#   Defaults to undef.
-#
-# [*os_privileged_user_auth_url*]
-#   (optional) Auth URL associated with the OpenStack privileged account.
-#   Defaults to undef.
-#
-# [*privileged_user*]
-#   (optional) Enables OpenStack privileged account.
-#   Defaults to undef.
+# [*os_region_name*]
+#   (optional) Some operations require cinder to make API requests
+#   to Nova. This sets the keystone region to be used for these
+#   requests. For example, boot-from-volume.
+#   Defaults to undef
 #
 class cinder::api (
-  $os_region_name                 = $::os_service_default,
-  $keymgr_encryption_api_url      = $::os_service_default,
-  $keymgr_encryption_auth_url     = $::os_service_default,
   $service_workers                = $::os_workers,
   $package_ensure                 = 'present',
   $bind_host                      = '0.0.0.0',
@@ -174,44 +134,29 @@ class cinder::api (
   $osapi_max_limit                = $::os_service_default,
   $service_name                   = $::cinder::params::api_service,
   $enable_proxy_headers_parsing   = $::os_service_default,
+  $max_request_body_size          = $::os_service_default,
   $use_ssl                        = false,
   $cert_file                      = $::os_service_default,
   $key_file                       = $::os_service_default,
   $ca_file                        = $::os_service_default,
   $auth_strategy                  = 'keystone',
   $osapi_volume_listen_port       = $::os_service_default,
-  $keymgr_backend                 = 'cinder.keymgr.conf_key_mgr.ConfKeyManager',
+  $use_forwarded_for              = $::os_service_default,
   # DEPRECATED PARAMETERS
-  $keymgr_api_class               = undef,
-  $nova_catalog_info              = undef,
-  $os_privileged_user_name        = undef,
-  $os_privileged_user_password    = undef,
-  $os_privileged_user_tenant      = undef,
-  $os_privileged_user_auth_url    = undef,
-  $privileged_user                = undef,
+  $os_region_name                 = undef
 ) inherits cinder::params {
 
-  include ::cinder::deps
-  include ::cinder::params
-  include ::cinder::policy
+  include cinder::deps
+  include cinder::params
+  include cinder::policy
 
-  validate_bool($manage_service)
-  validate_bool($enabled)
-
-  $deprecated_param_names = [
-    'nova_catalog_info',
-    'privileged_user',
-    'os_privileged_user_name',
-    'os_privileged_user_password',
-    'os_privileged_user_tenant',
-    'os_privileged_user_auth_url',
-  ]
-  $deprecated_param_names.each |$param_name| {
-    $param = getvar($param_name)
-    if $param != undef{
-      warning("The ${param_name} parameter is deprecated, has no effect and will be removed in the future release.")
-    }
+  if $os_region_name != undef {
+    warning('cinder::api::os_region_name is deprecated and has no effect. \
+Use cinder::nova::region_name instead')
   }
+
+  validate_legacy(Boolean, 'validate_bool', $manage_service)
+  validate_legacy(Boolean, 'validate_bool', $enabled)
 
   if $use_ssl {
     if is_service_default($cert_file) {
@@ -220,13 +165,6 @@ class cinder::api (
     if is_service_default($key_file) {
       fail('The key_file parameter is required when use_ssl is set to true')
     }
-  }
-
-  if $keymgr_api_class {
-    warning('The keymgr_api_class parameter is deprecated, use keymgr_backend')
-    $keymgr_backend_real = $keymgr_api_class
-  } else {
-    $keymgr_backend_real = $keymgr_backend
   }
 
   if $::cinder::params::api_package {
@@ -238,7 +176,7 @@ class cinder::api (
   }
 
   if $sync_db {
-    include ::cinder::db::sync
+    include cinder::db::sync
   }
 
   if $enabled {
@@ -261,7 +199,7 @@ class cinder::api (
     }
 
   } elsif $service_name == 'httpd' {
-    include ::apache::params
+    include apache::params
     service { 'cinder-api':
       ensure => 'stopped',
       name   => $::cinder::params::api_service,
@@ -280,27 +218,22 @@ running as a standalone service, or httpd for being run by a httpd server")
   cinder_config {
     'DEFAULT/osapi_volume_listen':      value => $bind_host;
     'DEFAULT/osapi_volume_workers':     value => $service_workers;
-    'DEFAULT/os_region_name':           value => $os_region_name;
     'DEFAULT/default_volume_type':      value => $default_volume_type;
     'DEFAULT/public_endpoint':          value => $public_endpoint;
     'DEFAULT/osapi_volume_base_URL':    value => $osapi_volume_base_url;
     'DEFAULT/osapi_max_limit':          value => $osapi_max_limit;
     'DEFAULT/osapi_volume_listen_port': value => $osapi_volume_listen_port;
     'DEFAULT/auth_strategy':            value => $auth_strategy;
+    'DEFAULT/use_forwarded_for':        value => $use_forwarded_for;
   }
 
   oslo::middleware {'cinder_config':
     enable_proxy_headers_parsing => $enable_proxy_headers_parsing,
-  }
-
-  cinder_config {
-    'key_manager/backend':        value => $keymgr_backend_real;
-    'barbican/barbican_endpoint': value => $keymgr_encryption_api_url;
-    'barbican/auth_endpoint':     value => $keymgr_encryption_auth_url;
+    max_request_body_size        => $max_request_body_size,
   }
 
   if $auth_strategy == 'keystone' {
-    include ::cinder::keystone::authtoken
+    include cinder::keystone::authtoken
   }
 
   # SSL Options

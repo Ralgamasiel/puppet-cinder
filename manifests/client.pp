@@ -12,8 +12,8 @@ class cinder::client(
   $package_ensure = 'present'
 ) {
 
-  include ::cinder::deps
-  include ::cinder::params
+  include cinder::deps
+  include cinder::params
 
   package { 'python-cinderclient':
     ensure => $package_ensure,
@@ -21,5 +21,5 @@ class cinder::client(
     tag    => ['openstack', 'cinder-support-package'],
   }
 
-  include '::openstacklib::openstackclient'
+  include openstacklib::openstackclient
 }

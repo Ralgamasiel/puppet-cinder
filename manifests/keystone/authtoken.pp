@@ -165,31 +165,31 @@
 #  (in seconds). Set to -1 to disable caching completely. Integer value
 #  Defaults to $::os_service_default.
 #
+# [*service_token_roles*]
+#  (Optional) A choice of roles that must be present in a service token.
+#  Service tokens are allowed to request that an expired token
+#  can be used and so this check should tightly control that
+#  only actual services should be sending this token. Roles
+#  here are applied as an ANY check so any role in this list
+#  must be present. For backwards compatibility reasons this
+#  currently only affects the allow_expired check. (list value)
+#  Defaults to $::os_service_default.
+#
 # [*service_token_roles_required*]
 #   (optional) backwards compatibility to ensure that the service tokens are
 #   compared against a list of possible roles for validity
 #   true/false
 #   Defaults to $::os_service_default.
 #
-# DEPRECATED PARAMETERS
+# [*service_type*]
+#  (Optional) The name or type of the service as it appears in the service
+#  catalog. This is used to validate tokens that have restricted access rules.
+#  Defaults to $::os_service_default.
 #
-# [*check_revocations_for_cached*]
-#  (Optional) If true, the revocation list will be checked for cached tokens.
-#  This requires that PKI tokens are configured on the identity server.
-#  boolean value.
-#  Defaults to undef.
-#
-# [*hash_algorithms*]
-#  (Optional) Hash algorithms to use for hashing PKI tokens. This may be a
-#  single algorithm or multiple. The algorithms are those supported by Python
-#  must be present in tokens. String value.
-#  standard hashlib.new(). The hashes will be tried in the order given, so put
-#  the preferred one first for performance. The result of the first hash will
-#  be stored in the cache. This will typically be set to multiple values only
-#  while migrating from a less secure algorithm to a more secure one. Once all
-#  the old tokens are expired this option should be set to a single value for
-#  better performance. List value.
-#  Defaults to undef.
+# [*interface*]
+#  (Optional) Interface to use for the Identity API endpoint. Valid values are
+#  "public", "internal" or "admin".
+#  Defaults to $::os_service_default.
 #
 class cinder::keystone::authtoken(
   $username                       = 'cinder',
@@ -224,24 +224,16 @@ class cinder::keystone::authtoken(
   $manage_memcache_package        = false,
   $region_name                    = $::os_service_default,
   $token_cache_time               = $::os_service_default,
+  $service_token_roles            = $::os_service_default,
   $service_token_roles_required   = $::os_service_default,
-  # DEPRECATED PARAMETERS
-  $check_revocations_for_cached   = undef,
-  $hash_algorithms                = undef,
+  $service_type                   = $::os_service_default,
+  $interface                      = $::os_service_default,
 ) {
 
-  include ::cinder::deps
+  include cinder::deps
 
   if is_service_default($password) {
     fail('Please set password for cinder service user')
-  }
-
-  if $check_revocations_for_cached {
-    warning('check_revocations_for_cached parameter is deprecated, has no effect and will be removed in the future.')
-  }
-
-  if $hash_algorithms {
-    warning('hash_algorithms parameter is deprecated, has no effect and will be removed in the future.')
   }
 
   keystone::resource::authtoken { 'cinder_config':
@@ -277,6 +269,9 @@ class cinder::keystone::authtoken(
     manage_memcache_package        => $manage_memcache_package,
     region_name                    => $region_name,
     token_cache_time               => $token_cache_time,
+    service_token_roles            => $service_token_roles,
     service_token_roles_required   => $service_token_roles_required,
+    service_type                   => $service_type,
+    interface                      => $interface,
   }
 }

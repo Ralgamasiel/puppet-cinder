@@ -4,6 +4,15 @@
 #
 # === Parameters
 #
+# [*enforce_scope*]
+#  (Optional) Whether or not to enforce scope when evaluating policies.
+#  Defaults to $::os_service_default.
+#
+# [*enforce_new_defaults*]
+#  (Optional) Whether or not to use old deprecated defaults when evaluating
+#  policies.
+#  Defaults to $::os_service_default.
+#
 # [*policies*]
 #   (Optional) Set of policies to configure for cinder
 #   Example :
@@ -20,27 +29,40 @@
 #   Defaults to empty hash.
 #
 # [*policy_path*]
-#   (Optional) Path to the cinder policy.json file
-#   Defaults to /etc/cinder/policy.json
+#   (Optional) Path to the cinder policy.yaml file
+#   Defaults to /etc/cinder/policy.yaml
+#
+# [*policy_dirs*]
+#   (Optional) Path to the cinder policy folder
+#   Defaults to $::os_service_default
 #
 class cinder::policy (
-  $policies    = {},
-  $policy_path = '/etc/cinder/policy.json',
+  $enforce_scope        = $::os_service_default,
+  $enforce_new_defaults = $::os_service_default,
+  $policies             = {},
+  $policy_path          = '/etc/cinder/policy.yaml',
+  $policy_dirs          = $::os_service_default,
 ) {
 
-  include ::cinder::deps
-  include ::cinder::params
+  include cinder::deps
+  include cinder::params
 
-  validate_hash($policies)
+  validate_legacy(Hash, 'validate_hash', $policies)
 
   Openstacklib::Policy::Base {
-    file_path  => $policy_path,
-    file_user  => 'root',
-    file_group => $::cinder::params::group,
+    file_path   => $policy_path,
+    file_user   => 'root',
+    file_group  => $::cinder::params::group,
+    file_format => 'yaml',
   }
 
   create_resources('openstacklib::policy::base', $policies)
 
-  oslo::policy { 'cinder_config': policy_file => $policy_path }
+  oslo::policy { 'cinder_config':
+    enforce_scope        => $enforce_scope,
+    enforce_new_defaults => $enforce_new_defaults,
+    policy_file          => $policy_path,
+    policy_dirs          => $policy_dirs,
+  }
 
 }
